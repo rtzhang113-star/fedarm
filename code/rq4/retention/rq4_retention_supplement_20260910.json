@@ -1,0 +1,17 @@
+{
+  "protocol": "fedarm_rq4_retention_historysafe_v1",
+  "status": "FROZEN",
+  "rq": "RQ4",
+  "base_config": "configs/base_config.json",
+  "methods": ["fedsaa_retain", "fedsaa_reset"],
+  "history_replay": true,
+  "query_evaluator_only": true,
+  "pilot_authorized": false,
+  "formal_authorized": true,
+  "evidence_level": "formal_supplement_three_density_five_seed",
+  "output_dir": "results/rq5_retention_d05_d15_d20",
+  "densities": [0.05, 0.15, 0.2],
+  "seeds": [42, 3407, 1024, 1, 0],
+  "qos_types": ["rt", "tp"],
+  "run_time_slices": 64
+}

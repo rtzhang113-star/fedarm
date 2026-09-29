@@ -1,0 +1,30 @@
+# Local environments and compiled files
+__pycache__/
+*.py[cod]
+*.nbc
+*.nbi
+.venv/
+venv/
+.pytest_cache/
+.env
+.env.*
+# Downloaded data and generated caches
+/data/WSDream-QoSDataset3/*
+!/data/WSDream-QoSDataset3/readme.txt
+/data/cache/
+# All generated outputs
+/results/*
+!/results/.gitkeep
+/artifacts/
+/experiment/
+/outputs/
+/output/
+*.log
+*.tmp
+*.bak
+*.npy
+*.npz
+*.pt
+*.pth
+*.pkl
+*.pickle

@@ -1,0 +1,24 @@
+{
+  "protocol": "fedarm_full_gpu_v1",
+  "cache_dir": "data/cache",
+  "output_dir": "results",
+  "shape_time_user_service": [64, 142, 4500],
+  "qos_types": ["rt", "tp"],
+  "run_time_slices": 64,
+  "seed": 42,
+  "density": 0.1,
+  "rank": 20,
+  "bias_eta": 0.8,
+  "factor_eta": 0.01,
+  "bias_epochs": 1,
+  "factor_epochs": 1,
+  "l2": 0.0003,
+  "beta": 0.3,
+  "factor_init_std": 0.05,
+  "num_edges": 6,
+  "raw_prediction_caps": {
+    "rt": 20.0,
+    "tp": 10000.0
+  },
+  "notes": "FedARM public runner defaults to one density and one seed; pass --densities and --seeds explicitly for the full paper grid."
+}
