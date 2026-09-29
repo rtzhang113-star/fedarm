@@ -1,13 +1,32 @@
 # FedARM
 
-This repository contains the source code and execution commands for
+This repository contains the source code and numerical experiment runners for
 **FedARM: Adaptive Residual Modeling for Federated Continual QoS Prediction in
 Cloud--Edge Environments**.
 
-The public release contains the numerical runners and their configurations. It
-does not contain plotting scripts, paper figures, generated results,
-checkpoints, raw data, or internal experiment-management records. Each command
-writes auditable CSV/JSON summaries below `results/`.
+The release contains core implementation code, baseline implementations, and
+the commands needed to run the experiments reported in the paper. It does not
+contain plotting code, paper figures, generated results, checkpoints, raw
+data, caches, or internal experiment-management records. Every runner writes
+auditable CSV/JSON summaries below `results/`.
+
+## Repository layout
+
+```text
+code/                         Core implementation and baselines
+  core/                       FedARM and shared numerical modules
+  baseline/                   FedAvg, FL-LFT, MultiFed, FedRecGEL, FedEM
+  config/                     Shared configuration
+  prepare_data.py             Raw-data to local-cache conversion
+experiment/                   Numerical experiment entry points
+  rq2/                        FedARM and baseline comparison
+  rq3/                        Component ablation
+  rq4/                        Robustness evaluation
+  rq5/                        Continual retention evaluation
+  rq6/                        Parameter sensitivity
+dataset/WSDream-QoSDataset3/ Dataset instructions only
+results/                      Empty output directory
+```
 
 ## Environment
 
@@ -17,133 +36,115 @@ Use Python 3.11 and install the dependencies:
 python -m pip install -r requirements.txt
 ```
 
-FedARM and the ablation, robustness, retention, and sensitivity runners use
-Numba CUDA and require an NVIDIA GPU with a compatible CUDA driver. The three
-NumPy baselines use CPU execution. PyTorch is not required by the public
-execution paths.
+FedARM and the RQ3--RQ6 runners use Numba CUDA and require an NVIDIA GPU with
+a compatible CUDA driver. The three NumPy baselines use CPU execution.
+PyTorch is not required by the public execution paths.
 
 ## Dataset
 
 Obtain WS-DREAM Dataset 3 from the
 [dataset provider](https://www.inpluslab.com/wsdream/) and place the raw
-`rtRate` and `tpRate` files in `data/WSDream-QoSDataset3/`. The required shape
-is `(64, 142, 4500)`. See `data/WSDream-QoSDataset3/readme.txt` for the input
-format and validity rules. Raw data and generated caches are not distributed.
+`rtRate` and `tpRate` files in `dataset/WSDream-QoSDataset3/`. The required
+shape is `(64, 142, 4500)`. See
+`dataset/WSDream-QoSDataset3/readme.txt` for the input format and validity
+rules. Raw data and generated caches are not distributed.
 
-Prepare the local caches from this directory:
+Prepare the local caches from the repository root:
 
 ```bash
-python scripts/prepare_data.py --qos rt tp
+python code/prepare_data.py --qos rt tp
 ```
+
+The generated caches are stored under `dataset/cache/`.
 
 ## Reproducing the paper experiments
 
-The manuscript uses the following RQ numbering. Some internal source
-directories retain their historical names; the mapping is stated explicitly.
+All commands below are run from the repository root. Use `--max-time-slices 1`
+or `--smoke` for a bounded preflight; a preflight is not a paper result.
 
-### RQ2: prediction and resource overhead
+### RQ2: FedARM and baseline comparison
 
 Run FedARM on the five densities and five seeds:
 
 ```bash
-python scripts/run_fedarm.py \
+python experiment/rq2/run_fedarm.py \
   --qos rt tp \
   --densities 0.01 0.05 0.10 0.15 0.20 \
   --seeds 42 3407 1024 1 0 \
   --output results/rq2_fedarm
 ```
 
-Run the GPU and NumPy baseline groups separately:
+Run the two baseline groups:
 
 ```bash
-python code/baseline/rq1/run_gpu_baselines.py \
+python code/baseline/run_gpu_baselines.py \
   --output results/rq2_baselines_gpu
 
-python code/baseline/rq1/run_reproduced_baselines.py \
+python code/baseline/run_reproduced_baselines.py \
   --output results/rq2_baselines_numpy
 ```
 
-The result directories contain per-slice metrics, resource telemetry, and
-method manifests. Use `--max-time-slices 1` for a bounded preflight; a
-preflight is not a paper result.
-
-### RQ3: core-module ablation
-
-The paper RQ3 runner is retained under the historical path
-`code/rq2/ablation/`. Inspect the six-variant matrix, then run the accuracy
-matrix and the Local RUMF control:
+### RQ3: component ablation
 
 ```bash
-python code/rq2/ablation/run_rq2_ablation.py --dry-run
-python code/rq2/ablation/run_accuracy_ablation.py --stop-on-error
-python code/rq2/ablation/run_local_rumf.py --stop-on-error
+python experiment/rq3/run_rq3_ablation.py --dry-run
+python experiment/rq3/run_accuracy_ablation.py --stop-on-error
+python experiment/rq3/run_local_rumf.py --stop-on-error
 ```
 
-Use `--smoke --stop-on-error` for a bounded execution check. The outputs are
-written below `results/rq3_`.
+The six-variant protocol and variant manifest are in
+`experiment/rq3/rq3_ablation_protocol.json` and
+`experiment/rq3/rq3_variants.json`.
 
-### RQ4: service-support imbalance and partial participation
-
-The paper RQ4 runner is retained under `code/rq3/robustness/`:
+### RQ4: robustness
 
 ```bash
-python code/rq3/robustness/run_robustness.py \
-  --protocol code/rq3/robustness/rq3_robustness_formal_r2_protocol.json \
+python experiment/rq4/run_robustness.py \
+  --protocol experiment/rq4/rq4_robustness_formal_protocol.json \
   --run-formal --resume --stop-on-error
 ```
 
-For a bounded run, use `--smoke --stop-on-error`. The formal matrix contains
-nine intervention scenarios, five densities, five seeds, both QoS attributes,
-and 64 time slices. Outputs are written below `results/rq4_robustness_`.
+Use `--smoke --stop-on-error` for a bounded execution check.
 
-### RQ5: continual state accumulation and historical retention
-
-The paper RQ5 runner is retained under `code/rq4/retention/`. The two formal
-configurations cover the five reported densities and should be run separately:
+### RQ5: continual retention
 
 ```bash
-python code/rq4/retention/run_retention.py \
-  --config code/rq4/retention/rq4_retention_formal_protocol_20260909.json \
+python experiment/rq5/run_retention.py \
+  --config experiment/rq5/rq5_retention_formal_protocol.json \
   --run-formal --resume
 
-python code/rq4/retention/run_retention.py \
-  --config code/rq4/retention/rq4_retention_supplement_20260910.json \
+python experiment/rq5/run_retention.py \
+  --config experiment/rq5/rq5_retention_supplement.json \
   --run-formal --resume
 ```
 
-Use `--smoke` with `smoke_config.json` for a bounded execution check. Outputs
-are written below `results/rq5_retention_`.
+Use `--smoke` for the bounded configuration in
+`experiment/rq5/smoke_config.json`.
 
 ### RQ6: parameter sensitivity
 
-Run the robustness reference matrix first, because the sensitivity protocol
-audits and reuses the default reference cells from RQ4. Then run:
-
 ```bash
-python code/rq6/sensitivity/run_sensitivity.py \
-  --protocol code/rq6/sensitivity/rq6_sensitivity_formal_protocol.json \
+python experiment/rq6/run_sensitivity.py \
+  --protocol experiment/rq6/rq6_sensitivity_formal_protocol.json \
   --run-formal --resume --stop-on-error
 ```
 
 Use `--smoke --stop-on-error` for a bounded execution check. The sensitivity
-runner varies latent rank, private-residual step size, and support-count
-exponent independently and writes raw summaries below
-`results/rq6_sensitivity_`.
+protocol independently varies latent rank, private-residual step size, and
+support-count exponent.
 
-All formal runners refuse to overwrite a non-empty result directory. Use a
-fresh `--output` path below `results/` for an independent run, or use
-`--resume` only when the existing manifest and source hashes match.
+Formal runners refuse to overwrite a non-empty result directory. Use a fresh
+output path below `results/`, or use `--resume` only when the existing
+manifest and source hashes match.
 
-## Core implementation
+## Core implementation and baselines
 
-`continual_qos/` contains the causal data protocol, GPU model, residual
-updates, service aggregation, quantization, and delivery accounting modules.
-`code/baseline/rq1/` contains FedAvg, FL-LFT, MultiFed, FedRecGEL, and FedEM.
-The RQ-specific directories contain only the numerical runners, protocols, and
-JSON configurations needed to produce the raw experiment outputs.
-
-The public source uses the paper's `FedSAA` spelling. Internal identifiers in
-manifests are kept stable where they are part of the execution contract.
+`code/core/` contains the causal data protocol, GPU models, residual updates,
+service aggregation, quantization, and communication accounting modules.
+`code/baseline/` contains FedAvg, FL-LFT, MultiFed, FedRecGEL, and FedEM.
+`experiment/rq2/`--`experiment/rq6/` contain only numerical runners and their
+paper-aligned protocol files. No plotting code is required for reproducing the
+raw numerical outputs.
 
 ## License and data
 

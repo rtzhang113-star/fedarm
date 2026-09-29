@@ -6,10 +6,10 @@ causal adaptations for continuous QoS regression on WS-DREAM Dataset 3; they
 are not claims that the original recommendation or offline QoS experiments
 were reproduced unchanged.
 
-The code is split by execution backend.  `rq1/run_gpu_baselines.py` runs
-FedAvg and FL-LFT with Numba CUDA.  `rq1/run_reproduced_baselines.py` runs
+The code is split by execution backend.  `run_gpu_baselines.py` runs
+FedAvg and FL-LFT with Numba CUDA.  `run_reproduced_baselines.py` runs
 MultiFed, FedRecGEL, and FedEM with their NumPy reference adaptations.  Both
-use the same protocol supplied by `continual_qos`:
+use the same protocol supplied by `code.core`:
 
 ```text
 history state + support[t] -> update -> read-only query[t]
@@ -21,25 +21,25 @@ density `1%, 5%, 10%, 15%, 20%`, and seeds `42, 3407, 1024, 1, 0`.
 
 ## Layout
 
-- `rq1/methods/`: FedAvg, FL-LFT, FedRecGEL, and FedEM numerical modules;
-- `rq1/gpu_models.py`: CUDA model wrappers for FedAvg and FL-LFT;
-- `rq1/reference_models.py`: adapters for the three NumPy baselines;
-- `rq1/run_*_baselines.py`: causal experiment runners;
-- `rq1/*_config.json`: frozen method settings.
+- `methods/`: FedAvg, FL-LFT, FedRecGEL, and FedEM numerical modules;
+- `gpu_models.py`: CUDA model wrappers for FedAvg and FL-LFT;
+- `reference_models.py`: adapters for the three NumPy baselines;
+- `run_*_baselines.py`: causal experiment runners;
+- `*_config.json`: frozen method settings.
 
-MultiFed is retained in `continual_qos/multifed.py` with its shared residual
+MultiFed is retained in `code/core/multifed.py` with its shared residual
 model dependencies.  Dataset 3 has no geographic labels, so the public
 adaptation uses the documented label-independent partition
 `edge_id = user_id % 6`.
 
 ## Data and outputs
 
-Place the provider's raw Dataset 3 files under `data/WSDream-QoSDataset3/` and
+Place the provider's raw Dataset 3 files under `dataset/WSDream-QoSDataset3/` and
 generate the local value caches at:
 
 ```text
-data/cache/rt_values.npy
-data/cache/tp_values.npy
+dataset/cache/rt_values.npy
+dataset/cache/tp_values.npy
 ```
 
 Raw data and generated caches are excluded from the release.  The runners
@@ -53,11 +53,11 @@ baselines.
 Run one causal time slice at 10% density before a formal matrix:
 
 ```powershell
-python code/baseline/rq1/run_gpu_baselines.py `
+python code/baseline/run_gpu_baselines.py `
   --methods fedavg fl_lft --densities 10 --seeds 42 --qos rt tp `
   --max-time-slices 1 --output results/preflight_gpu --stop-on-error
 
-python code/baseline/rq1/run_reproduced_baselines.py `
+python code/baseline/run_reproduced_baselines.py `
   --methods multifed fedrecgel fedem --densities 10 --seeds 42 --qos rt tp `
   --max-time-slices 1 --output results/preflight_numpy --stop-on-error
 ```
@@ -66,8 +66,8 @@ Run the five-density, five-seed formal matrices explicitly when the caches and
 runtime are available:
 
 ```powershell
-python code/baseline/rq1/run_gpu_baselines.py --output results/baselines_gpu_formal
-python code/baseline/rq1/run_reproduced_baselines.py --output results/baselines_numpy_formal
+python code/baseline/run_gpu_baselines.py --output results/baselines_gpu_formal
+python code/baseline/run_reproduced_baselines.py --output results/baselines_numpy_formal
 ```
 
 The CLI exposes only the five baselines listed above.  The CUDA module keeps a

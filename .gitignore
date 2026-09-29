@@ -9,14 +9,13 @@ venv/
 .env
 .env.*
 # Downloaded data and generated caches
-/data/WSDream-QoSDataset3/*
-!/data/WSDream-QoSDataset3/readme.txt
-/data/cache/
+/dataset/WSDream-QoSDataset3/*
+!/dataset/WSDream-QoSDataset3/readme.txt
+/dataset/cache/
 # All generated outputs
 /results/*
 !/results/.gitkeep
 /artifacts/
-/experiment/
 /outputs/
 /output/
 *.log

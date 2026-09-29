@@ -1,0 +1,174 @@
+{
+  "protocol_id": "fedarm_rq4_robustness_v1",
+  "status": "FROZEN",
+  "formal_authorized": true,
+  "rq": "RQ4",
+  "question": "Service-support imbalance and partial-client-participation robustness",
+  "base_config": "code/config/base_config.json",
+  "dataset": {
+    "name": "WS-DREAM Dataset 3",
+    "shape_time_user_service": [
+      64,
+      142,
+      4500
+    ],
+    "cache_dir": "dataset/cache"
+  },
+  "matrix": {
+    "densities": [
+      0.01,
+      0.05,
+      0.1,
+      0.15,
+      0.2
+    ],
+    "seeds": [
+      42,
+      3407,
+      1024,
+      1,
+      0
+    ],
+    "qos_types": [
+      "rt",
+      "tp"
+    ],
+    "time_slices": 64
+  },
+  "variants": [
+    {
+      "variant_id": "R0",
+      "variant": "full",
+      "paper_label": "FedARM (Full)"
+    },
+    {
+      "variant_id": "R1",
+      "variant": "service_mean_matched",
+      "paper_label": "FedARM w/ Service Mean",
+      "note": "Only replace PCS aggregation; retain CPSA, CARW+SRR and SAQ8. Not client-level FedAvg."
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "reference",
+      "axis": "reference",
+      "retention_fraction": 1,
+      "zipf_alpha": 0,
+      "participation_rate": 1
+    },
+    {
+      "id": "imbalance_a0",
+      "axis": "imbalance",
+      "retention_fraction": 0.5,
+      "zipf_alpha": 0,
+      "participation_rate": 1
+    },
+    {
+      "id": "imbalance_a1",
+      "axis": "imbalance",
+      "retention_fraction": 0.5,
+      "zipf_alpha": 1,
+      "participation_rate": 1
+    },
+    {
+      "id": "imbalance_a2",
+      "axis": "imbalance",
+      "retention_fraction": 0.5,
+      "zipf_alpha": 2,
+      "participation_rate": 1
+    },
+    {
+      "id": "participation_p75",
+      "axis": "participation",
+      "retention_fraction": 1,
+      "zipf_alpha": 0,
+      "participation_rate": 0.75
+    },
+    {
+      "id": "participation_p50",
+      "axis": "participation",
+      "retention_fraction": 1,
+      "zipf_alpha": 0,
+      "participation_rate": 0.5
+    },
+    {
+      "id": "participation_p25",
+      "axis": "participation",
+      "retention_fraction": 1,
+      "zipf_alpha": 0,
+      "participation_rate": 0.25
+    },
+    {
+      "id": "joint_a2_p50",
+      "axis": "joint",
+      "retention_fraction": 0.5,
+      "zipf_alpha": 2,
+      "participation_rate": 0.5
+    },
+    {
+      "id": "joint_a2_p25",
+      "axis": "joint",
+      "retention_fraction": 0.5,
+      "zipf_alpha": 2,
+      "participation_rate": 0.25
+    }
+  ],
+  "smoke": {
+    "scenario_ids": [
+      "reference",
+      "joint_a2_p50"
+    ],
+    "densities": [
+      0.01
+    ],
+    "seeds": [
+      42
+    ],
+    "qos_types": [
+      "rt",
+      "tp"
+    ],
+    "time_slices": 20
+  },
+  "outputs": {
+    "formal": "results/rq4_robustness_formal",
+    "smoke": "results/rq4_robustness_smoke"
+  },
+  "interpretation": {
+    "candidate_grid_only": false,
+    "imbalance_budget": "Per-client floor(0.5 * original support count), fixed across alpha levels; density denotes original support-pool density, not effective density.",
+    "query": "Original make_causal_split query remains unchanged; withheld support is not evaluated as query.",
+    "participation": "Per-slice seeded nested client subsets; inactive clients do not train or upload; evaluation can use current cloud shared state and frozen inactive private state.",
+    "joint": "Combined stress conditions, not a complete factorial interaction study.",
+    "metrics": [
+      "mae",
+      "rmse",
+      "mre",
+      "npre"
+    ],
+    "service_support_buckets": [
+      "0",
+      "1",
+      "2-4",
+      "5+"
+    ],
+    "empty_groups": "count=0, metrics=null; not zero error",
+    "formal_launch": "Approved by the user on 2026-09-02 after the 900-cell matrix was explained; run exactly this frozen matrix with --run-formal."
+  },
+  "authorization": {
+    "date": "2026-09-02",
+    "timezone": "Asia/Shanghai",
+    "user_instruction": "请开启实验！",
+    "scope": "9 scenarios x 2 variants x 5 densities x 5 seeds x RT/TP = 900 cells; 64 slices each",
+    "prepared_protocol": "experiment/rq4/rq4_robustness_formal_protocol.json",
+    "changes_to_experiment_design": "None. Only authorization metadata and candidate/frozen status differ from the prepared protocol."
+  },
+  "implementation_revision": {
+    "revision": "historysafe_r2",
+    "date": "2026-09-02",
+    "reason": "First formal cell failed the inactive-private-state gate at slice index 16; inherited CARW append wrote column 16 of a 16-column buffer.",
+    "fix": "RQ4-only model adapter allocates CARW_WINDOW+1 columns in both swapped history buffers. The logical CARW_WINDOW remains 16; no algorithm parameter or scenario change.",
+    "prior_failed_output": "results/rq4_robustness_formal",
+    "legacy_evidence": "RQ1/RQ2 sources and results are preserved. Their matching allocation/write pattern requires separate impact audit; do not assume full-trajectory equivalence."
+  }
+}

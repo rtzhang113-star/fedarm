@@ -1,0 +1,53 @@
+{
+  "protocol": "fedarm_baseline_causal_reference_reproductions_v1",
+  "shape_time_user_service": [64, 142, 4500],
+  "cache_dir": "dataset/cache",
+  "raw_prediction_caps": {
+    "rt": 20.0,
+    "tp": 10000.0
+  },
+  "methods": {
+    "multifed": {
+      "rank": 20,
+      "bias_eta": 0.8,
+      "factor_eta": 0.01,
+      "l2": 0.0003,
+      "beta": 0.3,
+      "factor_init_std": 0.05,
+      "bias_epochs": 1,
+      "factor_epochs": 1,
+      "num_edges": 6,
+      "external_weight": 0.5,
+      "internal_aggregations": 1,
+      "equivalence_atol": 1e-12,
+      "partition_semantics": "synthetic_user_id_modulo"
+    },
+    "fedrecgel": {
+      "factor_num": 32,
+      "num_layers": 3,
+      "local_lr": 0.01,
+      "global_lr": 0.001,
+      "rho_sh": 0.02,
+      "rho_ns": 0.02,
+      "local_epochs": 1,
+      "client_fraction": 0.1,
+      "task_migration": "implicit recommendation to fixed-log1p continuous QoS regression"
+    },
+    "fedem": {
+      "rank": 16,
+      "learning_rate": 0.1,
+      "regularization": 0.0,
+      "clients_sample_ratio": 1.0,
+      "agg_clients_ratio": 0.1,
+      "agg_mode": "both",
+      "sim_mode": "l2",
+      "similarity_source": "persistent_pca",
+      "alpha": 0.9,
+      "adapter_learning_rate": 0.1,
+      "adapter_regularization": 0.0,
+      "local_epochs": 10,
+      "batch_size": 256,
+      "task_migration": "implicit recommendation to fixed-log1p continuous QoS regression"
+    }
+  }
+}
